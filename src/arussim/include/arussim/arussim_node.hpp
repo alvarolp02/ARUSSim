@@ -33,6 +33,7 @@ class Simulator : public rclcpp::Node
     float input_delta_;
 
     visualization_msgs::msg::Marker marker_;
+    pcl::PointCloud<PointXYZColorScore> track_;
 
     void onTimer();
     void onCmd(const custom_msgs::msg::Cmd::SharedPtr msg);

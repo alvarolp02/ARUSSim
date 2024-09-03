@@ -1,4 +1,5 @@
 #include "arussim/arussim_node.hpp"
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 const float L = 1.5; // Distance between axles
 const float m = 270.0; //Mass of the vehicle
@@ -15,12 +16,13 @@ Simulator::Simulator() : Node("simulator")
     timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Simulator::onTimer, this));
     subscription_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, std::bind(&Simulator::onCmd, this, std::placeholders::_1));
     
+    // Load the car mesh
     marker_.header.frame_id = "arussim/vehicle_cog";
     marker_.header.stamp = clock_->now();
     marker_.ns = "arussim";
     marker_.id = 0;
     marker_.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
-    marker_.mesh_resource = "package://arussim/meshes/whole_car.stl";
+    marker_.mesh_resource = "package://arussim/resources/meshes/whole_car.stl";
     marker_.action = visualization_msgs::msg::Marker::ADD;
     marker_.pose.position.x = 1.0;
     marker_.pose.position.y = 0;
@@ -36,6 +38,17 @@ Simulator::Simulator() : Node("simulator")
     marker_.color.g = 55.0/255.0;
     marker_.color.b = 70.0/255.0;
     marker_.color.a = 1.0;
+
+    // Load the track pointcloud
+    std::string package_path = ament_index_cpp::get_package_share_directory("arussim");
+    std::string filename = package_path+"/resources/meshes/FSG.pcd";
+    if (pcl::io::loadPCDFile<PointXYZColorScore>(filename, track_) == -1)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Couldn't read file %s", filename.c_str());
+        return;
+    }
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Loaded %ld data points from %s", track_.points.size(), filename.c_str());
+
 }
 
 void Simulator::onTimer()
@@ -55,36 +68,11 @@ void Simulator::onTimer()
     marker_.header.stamp = clock_->now();
     marker_pub_->publish(marker_);
 
-
-    auto map_cloud = std::make_shared<pcl::PointCloud<PointXYZColorScore>>();
-    for (int i = 0; i < 10; i++)
-    {
-        PointXYZColorScore point;
-        point.x = 3*i;
-        point.y = 1.5;
-        point.z = 0;
-        point.color = 0;
-        point.score = 1.0;
-        map_cloud->push_back(point);
-    }
-    for (int i = 0; i < 10; i++)
-    {
-        PointXYZColorScore point;
-        point.x = 3*i;
-        point.y = -1.5;
-        point.z = 0;
-        point.color = 1;
-        point.score = 1.0;
-        map_cloud->push_back(point);
-    }
-
-    sensor_msgs::msg::PointCloud2 map_msg;
-    pcl::toROSMsg(*map_cloud,map_msg);
-    map_msg.header.stamp = clock_->now();
-    map_msg.header.frame_id="arussim/world";
-    perception_pub_->publish(map_msg);
-
-    pcl::io::savePCDFileASCII("pointcloud.pcd", *map_cloud);
+    sensor_msgs::msg::PointCloud2 track_msg;
+    pcl::toROSMsg(track_, track_msg);
+    track_msg.header.stamp = clock_->now();
+    track_msg.header.frame_id="arussim/world";
+    perception_pub_->publish(track_msg);
 }
 
 void Simulator::onCmd(const custom_msgs::msg::Cmd::SharedPtr msg)

@@ -3,13 +3,7 @@ Panels:
     Help Height: 85
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Global Options1
-        - /Status1
-        - /Grid1
-        - /Axes1
-        - /Marker1
-        - /PointCloud21
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 515
   - Class: rviz_common/Selection
@@ -34,7 +28,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 3
+      Cell Size: 5
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -55,7 +49,7 @@ Visualization Manager:
       Enabled: true
       Length: 2
       Name: Axes
-      Radius: 0.4000000059604645
+      Radius: 0.30000001192092896
       Reference Frame: arussim/vehicle_cog
       Value: true
     - Class: rviz_default_plugins/Marker
@@ -72,7 +66,7 @@ Visualization Manager:
         Value: /arussim/vehicle_visualization
       Value: true
     - Alpha: 1
-      Autocompute Intensity Bounds: true
+      Autocompute Intensity Bounds: false
       Autocompute Value Bounds:
         Max Value: 10
         Min Value: -10
@@ -151,25 +145,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 11.210759162902832
+      Distance: 30.541255950927734
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.426586389541626
-        Y: 0.7593209743499756
-        Z: 0.3812800943851471
+        X: 0.7436413168907166
+        Y: 0.8635309934616089
+        Z: 4.367926120758057
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8003976345062256
-      Target Frame: <Fixed Frame>
+      Pitch: 0.5416291356086731
+      Target Frame: arussim/vehicle_cog
       Value: Orbit (rviz)
-      Yaw: 2.4003918170928955
+      Yaw: 2.79374361038208
     Saved: ~
 Window Geometry:
   Displays:
@@ -187,5 +181,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 242
-  Y: 77
+  X: 316
+  Y: 99
