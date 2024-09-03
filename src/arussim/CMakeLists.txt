@@ -9,13 +9,17 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(custom_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 include_directories(include)
 
 # generate executables
 add_executable(arussim_exec src/arussim_node.cpp)
-ament_target_dependencies(arussim_exec rclcpp std_msgs custom_msgs)
+ament_target_dependencies(arussim_exec rclcpp std_msgs geometry_msgs sensor_msgs visualization_msgs custom_msgs tf2_ros)
 
   
 install(TARGETS
@@ -24,6 +28,10 @@ install(TARGETS
 
 # share launchs location
 install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY meshes
   DESTINATION share/${PROJECT_NAME})
 
 

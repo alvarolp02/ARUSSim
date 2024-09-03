@@ -13,6 +13,7 @@ find_package(rosidl_default_generators REQUIRED) # for custom messages
 # generate custom messages
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/State.msg"
+  "msg/Cmd.msg"
   DEPENDENCIES std_msgs
 )
 

@@ -8,11 +8,9 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
     # Get the package directory
     package_name = 'arussim'  # Replace with your package name
-    rviz_config_dir = os.path.join(
-        get_package_share_directory(package_name),
-        'config',  # The directory inside the package where RViz configs are stored
-        'arrussim_rviz_config.rviz'  # Replace with your RViz config filename
-    )
+    rviz_config_dir = os.path.join(get_package_share_directory(package_name), 
+                                   'config', 
+                                   'arussim_rviz_config.rviz')
 
     # Launch configuration variables
     rviz_config_file = LaunchConfiguration('rviz_config_file', default=rviz_config_dir)
