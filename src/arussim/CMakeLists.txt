@@ -14,19 +14,32 @@ find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(custom_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(PCL REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
-include_directories(include)
+include_directories(
+  include
+  ${PCL_INCLUDE_DIRS}
+)
 
 # generate executables
 add_executable(arussim_exec src/arussim_node.cpp)
-ament_target_dependencies(arussim_exec rclcpp std_msgs geometry_msgs sensor_msgs visualization_msgs custom_msgs tf2_ros)
+ament_target_dependencies(arussim_exec rclcpp 
+                            std_msgs 
+                            geometry_msgs 
+                            sensor_msgs 
+                            visualization_msgs 
+                            custom_msgs 
+                            tf2_ros
+                            PCL
+                            pcl_conversions)
 
   
 install(TARGETS
   arussim_exec
   DESTINATION lib/${PROJECT_NAME})
 
-# share launchs location
+# share folders location
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY config

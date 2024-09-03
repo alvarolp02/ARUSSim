@@ -8,6 +8,11 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2/LinearMath/Quaternion.h"
 
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <pcl/io/pcd_io.h>
+#include <iostream>
+#include "PointXYZColorScore.h"
+
 
 class Simulator : public rclcpp::Node
 {
@@ -37,6 +42,7 @@ class Simulator : public rclcpp::Node
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Subscription<custom_msgs::msg::Cmd>::SharedPtr subscription_;
     rclcpp::Publisher<custom_msgs::msg::State>::SharedPtr state_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr perception_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 };
