@@ -17,8 +17,10 @@ Simulator::Simulator() : Node("simulator")
     marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/arussim/vehicle_visualization", 1);
     slow_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Simulator::onSlowTimer, this));
     fast_timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Simulator::onFastTimer, this));
-    subscription_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, std::bind(&Simulator::onCmd, this, std::placeholders::_1));
-    
+    cmd_sub_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, std::bind(&Simulator::onCmd, this, std::placeholders::_1));
+    rviz_telep_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 1, std::bind(&Simulator::onRvizTelep, this, std::placeholders::_1));
+
+
     // Load the car mesh
     marker_.header.frame_id = "arussim/vehicle_cog";
     marker_.header.stamp = clock_->now();
@@ -82,7 +84,7 @@ void Simulator::onSlowTimer()
             }
         }
     }
-    
+
     sensor_msgs::msg::PointCloud2 perception_msg;
     pcl::toROSMsg(perception_cloud, perception_msg);
     perception_msg.header.stamp = clock_->now();
@@ -116,6 +118,21 @@ void Simulator::onCmd(const custom_msgs::msg::Cmd::SharedPtr msg)
     input_acc_ = msg->acc;
     input_delta_ = msg->delta;
     time_last_cmd_ = clock_->now();
+}
+
+void Simulator::onRvizTelep(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+{
+    tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
+    tf2::Matrix3x3 mat(q);
+    double roll, pitch, yaw;
+    mat.getRPY(roll, pitch, yaw);
+    
+    x_ = msg->pose.pose.position.x;
+    y_ = msg->pose.pose.position.y;
+    yaw_ = yaw;
+    vx_ = 0;
+    vy_ = 0;
+    r_ = 0;
 }
 
 void Simulator::updateState()

@@ -16,6 +16,7 @@
   <depend>visualization_msgs</depend>
   <depend>custom_msgs</depend>
   <depend>tf2_ros</depend>
+  <depend>tf2</depend>
   <depend>PCL</depend>
   <depend>pcl_conversions</depend>
   
