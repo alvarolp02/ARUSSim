@@ -35,14 +35,18 @@ class Simulator : public rclcpp::Node
     visualization_msgs::msg::Marker marker_;
     pcl::PointCloud<PointXYZColorScore> track_;
 
-    void onTimer();
+    void onSlowTimer();
+    void onFastTimer();
     void onCmd(const custom_msgs::msg::Cmd::SharedPtr msg);
     void updateState();
     void broadcast_transform();
 
-    rclcpp::TimerBase::SharedPtr timer_;
+
+    rclcpp::TimerBase::SharedPtr slow_timer_;
+    rclcpp::TimerBase::SharedPtr fast_timer_;
     rclcpp::Subscription<custom_msgs::msg::Cmd>::SharedPtr subscription_;
     rclcpp::Publisher<custom_msgs::msg::State>::SharedPtr state_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr track_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr perception_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;

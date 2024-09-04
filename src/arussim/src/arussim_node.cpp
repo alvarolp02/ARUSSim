@@ -1,5 +1,6 @@
 #include "arussim/arussim_node.hpp"
 #include <ament_index_cpp/get_package_share_directory.hpp>
+#include <random>
 
 const float L = 1.5; // Distance between axles
 const float m = 270.0; //Mass of the vehicle
@@ -11,9 +12,11 @@ Simulator::Simulator() : Node("simulator")
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
     state_pub_ = this->create_publisher<custom_msgs::msg::State>("/arussim/state", 10);
+    track_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/track", 10);
     perception_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/perception", 10);
-    marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/arussim/vehicle_visualization", 10);
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Simulator::onTimer, this));
+    marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/arussim/vehicle_visualization", 1);
+    slow_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Simulator::onSlowTimer, this));
+    fast_timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Simulator::onFastTimer, this));
     subscription_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, std::bind(&Simulator::onCmd, this, std::placeholders::_1));
     
     // Load the car mesh
@@ -27,10 +30,6 @@ Simulator::Simulator() : Node("simulator")
     marker_.pose.position.x = 1.0;
     marker_.pose.position.y = 0;
     marker_.pose.position.z = 0;
-    marker_.pose.orientation.x = 0;
-    marker_.pose.orientation.y = 0;
-    marker_.pose.orientation.z = 0;
-    marker_.pose.orientation.w = 1;
     marker_.scale.x = 0.001;
     marker_.scale.y = 0.001;
     marker_.scale.z = 0.001;
@@ -38,10 +37,11 @@ Simulator::Simulator() : Node("simulator")
     marker_.color.g = 55.0/255.0;
     marker_.color.b = 70.0/255.0;
     marker_.color.a = 1.0;
+    marker_.lifetime = rclcpp::Duration::from_seconds(0.0);
 
     // Load the track pointcloud
     std::string package_path = ament_index_cpp::get_package_share_directory("arussim");
-    std::string filename = package_path+"/resources/meshes/FSG.pcd";
+    std::string filename = package_path+"/resources/tracks/FSG.pcd";
     if (pcl::io::loadPCDFile<PointXYZColorScore>(filename, track_) == -1)
     {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Couldn't read file %s", filename.c_str());
@@ -51,8 +51,48 @@ Simulator::Simulator() : Node("simulator")
 
 }
 
-void Simulator::onTimer()
+void Simulator::onSlowTimer()
 {   
+    // Update track
+    sensor_msgs::msg::PointCloud2 track_msg;
+    pcl::toROSMsg(track_, track_msg);
+    track_msg.header.stamp = clock_->now();
+    track_msg.header.frame_id="arussim/world";
+    track_pub_->publish(track_msg);
+
+    // Random noise generation
+    std::random_device rd; 
+    std::mt19937 gen(rd());
+    std::normal_distribution<> dist(0.0, 0.01);
+
+    auto perception_cloud = pcl::PointCloud<PointXYZColorScore>();
+    for (auto &point : track_.points)
+    {
+        float d = std::sqrt(std::pow(point.x - x_, 2) + std::pow(point.y - y_, 2));
+        if (d < 20)
+        {
+            PointXYZColorScore p;
+            p.x = (point.x - x_)*std::cos(yaw_) + (point.y - y_)*std::sin(yaw_) + dist(gen);
+            p.y = -(point.x - x_)*std::sin(yaw_) + (point.y - y_)*std::cos(yaw_) + dist(gen);
+            p.z = 0.0;
+            p.color = point.color;
+            p.score = 1.0;
+            if (p.x > 0) {
+                perception_cloud.push_back(p);
+            }
+        }
+    }
+    
+    sensor_msgs::msg::PointCloud2 perception_msg;
+    pcl::toROSMsg(perception_cloud, perception_msg);
+    perception_msg.header.stamp = clock_->now();
+    perception_msg.header.frame_id="arussim/vehicle_cog";
+    perception_pub_->publish(perception_msg);
+}
+
+void Simulator::onFastTimer()
+{   
+    // Update state and broadcast transform
     updateState();
     
     auto message = custom_msgs::msg::State();
@@ -65,14 +105,10 @@ void Simulator::onTimer()
     state_pub_->publish(message);
 
     broadcast_transform();
+    
+    // Update vehicle marker
     marker_.header.stamp = clock_->now();
     marker_pub_->publish(marker_);
-
-    sensor_msgs::msg::PointCloud2 track_msg;
-    pcl::toROSMsg(track_, track_msg);
-    track_msg.header.stamp = clock_->now();
-    track_msg.header.frame_id="arussim/world";
-    perception_pub_->publish(track_msg);
 }
 
 void Simulator::onCmd(const custom_msgs::msg::Cmd::SharedPtr msg)

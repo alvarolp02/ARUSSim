@@ -3,7 +3,10 @@ Panels:
     Help Height: 85
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Global Options1
+        - /PointCloud21
+        - /PointCloud22
       Splitter Ratio: 0.5
     Tree Height: 515
   - Class: rviz_common/Selection
@@ -58,7 +61,7 @@ Visualization Manager:
       Namespaces:
         arussim: true
       Topic:
-        Depth: 5
+        Depth: 1
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
@@ -95,6 +98,40 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
+        Value: /arussim/track
+      Use Fixed Frame: true
+      Use rainbow: false
+      Value: true
+    - Alpha: 0.699999988079071
+      Autocompute Intensity Bounds: false
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: color
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 0
+      Max Intensity: 1
+      Min Color: 0; 0; 255
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.550000011920929
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
         Value: /arussim/perception
       Use Fixed Frame: true
       Use rainbow: false
@@ -103,7 +140,7 @@ Visualization Manager:
   Global Options:
     Background Color: 255; 255; 255
     Fixed Frame: arussim/world
-    Frame Rate: 30
+    Frame Rate: 100
   Name: root
   Tools:
     - Class: rviz_default_plugins/Interact
@@ -145,25 +182,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 30.541255950927734
+      Distance: 12.34695816040039
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.7436413168907166
-        Y: 0.8635309934616089
-        Z: 4.367926120758057
+        X: -0.053275346755981445
+        Y: -0.041253361850976944
+        Z: 2.2063629627227783
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5416291356086731
+      Pitch: 0.4766289293766022
       Target Frame: arussim/vehicle_cog
       Value: Orbit (rviz)
-      Yaw: 2.79374361038208
+      Yaw: 2.8487648963928223
     Saved: ~
 Window Geometry:
   Displays:
