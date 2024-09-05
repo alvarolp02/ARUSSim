@@ -23,17 +23,17 @@ class Simulator : public rclcpp::Node
     Simulator();
 
   private:
-    float x_ = 0;
-    float y_ = 0;
-    float yaw_ = 0;
-    float vx_ = 0;
-    float vy_ = 0;
-    float r_ = 0;
+    double x_ = 0;
+    double y_ = 0;
+    double yaw_ = 0;
+    double vx_ = 0;
+    double vy_ = 0;
+    double r_ = 0;
 
     rclcpp::Clock::SharedPtr clock_;
     rclcpp::Time time_last_cmd_;
-    float input_acc_;
-    float input_delta_;
+    double input_acc_;
+    double input_delta_;
 
     visualization_msgs::msg::Marker marker_;
     pcl::PointCloud<PointXYZColorScore> track_;

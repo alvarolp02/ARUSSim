@@ -2,12 +2,41 @@
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <random>
 
-const float L = 1.5; // Distance between axles
-const float m = 270.0; //Mass of the vehicle
-const float fc = 0.5; //Coefficient of friction
+
+std::string track = "FSG.pcd";
+double fc = 0.5;
+double state_update_rate = 100;
+double mass = 200;
+double L = 1.5;
+double fov = 20;
+double sensor_rate = 10;
+double noise = 0.01;
+double min_perception_x = -1;
+
 
 Simulator::Simulator() : Node("simulator")
 {   
+    this->declare_parameter<std::string>("track", track);
+    this->declare_parameter<double>("friction_coef", fc);
+    this->declare_parameter<double>("state_update_rate", state_update_rate);
+    this->declare_parameter<double>("mass", mass);
+    this->declare_parameter<double>("wheel_base", L);
+    this->declare_parameter<double>("sensor.fov_radius", fov);
+    this->declare_parameter<double>("sensor.pub_rate", sensor_rate);
+    this->declare_parameter<double>("sensor.noise_sigma", noise);
+    this->declare_parameter<double>("sensor.cut_cones_below_x", min_perception_x);
+
+    this->get_parameter("track", track);
+    this->get_parameter("friction_coef", fc);
+    this->get_parameter("state_update_rate", state_update_rate);
+    this->get_parameter("mass", mass);
+    this->get_parameter("wheel_base", L);
+    this->get_parameter("sensor.fov_radius", fov);
+    this->get_parameter("sensor.pub_rate", sensor_rate);
+    this->get_parameter("sensor.noise_sigma", noise);
+    this->get_parameter("sensor.cut_cones_below_x", min_perception_x);
+
+
     clock_ = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
@@ -15,8 +44,8 @@ Simulator::Simulator() : Node("simulator")
     track_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/track", 10);
     perception_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/perception", 10);
     marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/arussim/vehicle_visualization", 1);
-    slow_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&Simulator::onSlowTimer, this));
-    fast_timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&Simulator::onFastTimer, this));
+    slow_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/sensor_rate)), std::bind(&Simulator::onSlowTimer, this));
+    fast_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/state_update_rate)), std::bind(&Simulator::onFastTimer, this));
     cmd_sub_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, std::bind(&Simulator::onCmd, this, std::placeholders::_1));
     rviz_telep_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 1, std::bind(&Simulator::onRvizTelep, this, std::placeholders::_1));
 
@@ -43,7 +72,7 @@ Simulator::Simulator() : Node("simulator")
 
     // Load the track pointcloud
     std::string package_path = ament_index_cpp::get_package_share_directory("arussim");
-    std::string filename = package_path+"/resources/tracks/FSG.pcd";
+    std::string filename = package_path+"/resources/tracks/"+track;
     if (pcl::io::loadPCDFile<PointXYZColorScore>(filename, track_) == -1)
     {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Couldn't read file %s", filename.c_str());
@@ -65,13 +94,13 @@ void Simulator::onSlowTimer()
     // Random noise generation
     std::random_device rd; 
     std::mt19937 gen(rd());
-    std::normal_distribution<> dist(0.0, 0.01);
+    std::normal_distribution<> dist(0.0, noise);
 
     auto perception_cloud = pcl::PointCloud<PointXYZColorScore>();
     for (auto &point : track_.points)
     {
-        float d = std::sqrt(std::pow(point.x - x_, 2) + std::pow(point.y - y_, 2));
-        if (d < 20)
+        double d = std::sqrt(std::pow(point.x - x_, 2) + std::pow(point.y - y_, 2));
+        if (d < fov)
         {
             PointXYZColorScore p;
             p.x = (point.x - x_)*std::cos(yaw_) + (point.y - y_)*std::sin(yaw_) + dist(gen);
@@ -79,7 +108,7 @@ void Simulator::onSlowTimer()
             p.z = 0.0;
             p.color = point.color;
             p.score = 1.0;
-            if (p.x > 0) {
+            if (p.x > min_perception_x) {
                 perception_cloud.push_back(p);
             }
         }
@@ -126,7 +155,7 @@ void Simulator::onRvizTelep(const geometry_msgs::msg::PoseWithCovarianceStamped:
     tf2::Matrix3x3 mat(q);
     double roll, pitch, yaw;
     mat.getRPY(roll, pitch, yaw);
-    
+
     x_ = msg->pose.pose.position.x;
     y_ = msg->pose.pose.position.y;
     yaw_ = yaw;
@@ -143,12 +172,12 @@ void Simulator::updateState()
         input_acc_ = vx_ > 0 ? -fc*9.8 : fc*9.8;
     }
 
-    float dt = 0.01;
+    double dt = 0.01;
 
     // Model equations
-    float x_dot = vx_ * std::cos(yaw_);
-    float y_dot = vx_ * std::sin(yaw_);
-    float yaw_dot = vx_ / L * std::tan(input_delta_);
+    double x_dot = vx_ * std::cos(yaw_);
+    double y_dot = vx_ * std::sin(yaw_);
+    double yaw_dot = vx_ / L * std::tan(input_delta_);
     
     // Update state
     x_ += x_dot * dt;

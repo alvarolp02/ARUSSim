@@ -1,0 +1,15 @@
+arussim:
+  ros__parameters:
+    track: "FSG.pcd"
+    friction_coef: 0.5 
+    state_update_rate: 100.0      # Hz
+
+    vehicle:
+      mass:               270.0   # kg
+      wheel_base:         1.5     # m
+
+    sensor:
+      fov_radius:         20.0    # m   Perception circular range
+      pub_rate:           10.0    # Hz  Publish rate
+      noise_sigma:        0.01    # m   Noise standard deviation
+      cut_cones_below_x:  -1.0    # m   Cut cones that are further than this distance in x car axis

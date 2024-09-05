@@ -15,6 +15,10 @@ def generate_launch_description():
     # Launch configuration variables
     rviz_config_file = LaunchConfiguration('rviz_config_file', default=rviz_config_dir)
 
+    config_file = os.path.join(get_package_share_directory(package_name), 
+                               'config', 
+                               'params.yaml')
+
     return LaunchDescription([
         # Declare the launch argument for the RViz config file
         DeclareLaunchArgument(
@@ -38,7 +42,7 @@ def generate_launch_description():
             executable='arussim_exec',
             name='arussim',
             output='screen',
-            arguments=None
+            parameters=[config_file]
         )
     ])
 
