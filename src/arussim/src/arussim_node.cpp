@@ -3,38 +3,27 @@
 #include <random>
 
 
-std::string track = "FSG.pcd";
-double fc = 0.5;
-double state_update_rate = 100;
-double mass = 200;
-double L = 1.5;
-double fov = 20;
-double sensor_rate = 10;
-double noise = 0.01;
-double min_perception_x = -1;
-
-
 Simulator::Simulator() : Node("simulator")
 {   
-    this->declare_parameter<std::string>("track", track);
-    this->declare_parameter<double>("friction_coef", fc);
-    this->declare_parameter<double>("state_update_rate", state_update_rate);
-    this->declare_parameter<double>("mass", mass);
-    this->declare_parameter<double>("wheel_base", L);
-    this->declare_parameter<double>("sensor.fov_radius", fov);
-    this->declare_parameter<double>("sensor.pub_rate", sensor_rate);
-    this->declare_parameter<double>("sensor.noise_sigma", noise);
-    this->declare_parameter<double>("sensor.cut_cones_below_x", min_perception_x);
+    this->declare_parameter<std::string>("track", "FSG.pcd");
+    this->declare_parameter<double>("friction_coef", 0.5);
+    this->declare_parameter<double>("state_update_rate", 100);
+    this->declare_parameter<double>("mass", 200);
+    this->declare_parameter<double>("wheel_base", 1.5);
+    this->declare_parameter<double>("sensor.fov_radius", 20);
+    this->declare_parameter<double>("sensor.pub_rate", 10);
+    this->declare_parameter<double>("sensor.noise_sigma", 0.01);
+    this->declare_parameter<double>("sensor.cut_cones_below_x", -1);
 
-    this->get_parameter("track", track);
-    this->get_parameter("friction_coef", fc);
-    this->get_parameter("state_update_rate", state_update_rate);
-    this->get_parameter("mass", mass);
-    this->get_parameter("wheel_base", L);
-    this->get_parameter("sensor.fov_radius", fov);
-    this->get_parameter("sensor.pub_rate", sensor_rate);
-    this->get_parameter("sensor.noise_sigma", noise);
-    this->get_parameter("sensor.cut_cones_below_x", min_perception_x);
+    this->get_parameter("track", kTrackName);
+    this->get_parameter("friction_coef", kFrictionCoef);
+    this->get_parameter("state_update_rate", kStateUpdateRate);
+    this->get_parameter("mass", kMass);
+    this->get_parameter("wheel_base", kWheelBase);
+    this->get_parameter("sensor.fov_radius", kFOV);
+    this->get_parameter("sensor.pub_rate", kSensorRate);
+    this->get_parameter("sensor.noise_sigma", kNoise);
+    this->get_parameter("sensor.cut_cones_below_x", kMinPerceptionX);
 
 
     clock_ = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
@@ -44,8 +33,8 @@ Simulator::Simulator() : Node("simulator")
     track_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/track", 10);
     perception_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/perception", 10);
     marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/arussim/vehicle_visualization", 1);
-    slow_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/sensor_rate)), std::bind(&Simulator::onSlowTimer, this));
-    fast_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/state_update_rate)), std::bind(&Simulator::onFastTimer, this));
+    slow_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/kSensorRate)), std::bind(&Simulator::onSlowTimer, this));
+    fast_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/kStateUpdateRate)), std::bind(&Simulator::onFastTimer, this));
     cmd_sub_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, std::bind(&Simulator::onCmd, this, std::placeholders::_1));
     rviz_telep_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 1, std::bind(&Simulator::onRvizTelep, this, std::placeholders::_1));
 
@@ -72,7 +61,7 @@ Simulator::Simulator() : Node("simulator")
 
     // Load the track pointcloud
     std::string package_path = ament_index_cpp::get_package_share_directory("arussim");
-    std::string filename = package_path+"/resources/tracks/"+track;
+    std::string filename = package_path+"/resources/tracks/"+kTrackName;
     if (pcl::io::loadPCDFile<ConeXYZColorScore>(filename, track_) == -1)
     {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Couldn't read file %s", filename.c_str());
@@ -94,13 +83,13 @@ void Simulator::onSlowTimer()
     // Random noise generation
     std::random_device rd; 
     std::mt19937 gen(rd());
-    std::normal_distribution<> dist(0.0, noise);
+    std::normal_distribution<> dist(0.0, kNoise);
 
     auto perception_cloud = pcl::PointCloud<ConeXYZColorScore>();
     for (auto &point : track_.points)
     {
         double d = std::sqrt(std::pow(point.x - x_, 2) + std::pow(point.y - y_, 2));
-        if (d < fov)
+        if (d < kFOV)
         {
             ConeXYZColorScore p;
             p.x = (point.x - x_)*std::cos(yaw_) + (point.y - y_)*std::sin(yaw_) + dist(gen);
@@ -108,7 +97,7 @@ void Simulator::onSlowTimer()
             p.z = 0.0;
             p.color = point.color;
             p.score = 1.0;
-            if (p.x > min_perception_x) {
+            if (p.x > kMinPerceptionX) {
                 perception_cloud.push_back(p);
             }
         }
@@ -169,7 +158,7 @@ void Simulator::updateState()
     rclcpp::Time current_time = clock_->now();
     if((current_time - time_last_cmd_).seconds() > 0.2 && vx_ != 0)
     {
-        input_acc_ = vx_ > 0 ? -fc*9.8 : fc*9.8;
+        input_acc_ = vx_ > 0 ? -kFrictionCoef*9.8 : kFrictionCoef*9.8;
     }
 
     double dt = 0.01;
@@ -177,7 +166,7 @@ void Simulator::updateState()
     // Model equations
     double x_dot = vx_ * std::cos(yaw_);
     double y_dot = vx_ * std::sin(yaw_);
-    double yaw_dot = vx_ / L * std::tan(input_delta_);
+    double yaw_dot = vx_ / kWheelBase * std::tan(input_delta_);
     
     // Update state
     x_ += x_dot * dt;

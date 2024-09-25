@@ -30,6 +30,16 @@ class Simulator : public rclcpp::Node
     double vy_ = 0;
     double r_ = 0;
 
+    std::string kTrackName;
+    double kFrictionCoef;
+    double kStateUpdateRate;
+    double kMass;
+    double kWheelBase;
+    double kFOV;
+    double kSensorRate;
+    double kNoise;
+    double kMinPerceptionX;
+
     rclcpp::Clock::SharedPtr clock_;
     rclcpp::Time time_last_cmd_;
     double input_acc_;
