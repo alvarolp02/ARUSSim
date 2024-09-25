@@ -31,12 +31,22 @@ Simulator::Simulator() : Node("simulator")
 
     state_pub_ = this->create_publisher<custom_msgs::msg::State>("/arussim/state", 10);
     track_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/track", 10);
-    perception_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/arussim/perception", 10);
-    marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("/arussim/vehicle_visualization", 1);
-    slow_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/kSensorRate)), std::bind(&Simulator::onSlowTimer, this));
-    fast_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000/kStateUpdateRate)), std::bind(&Simulator::onFastTimer, this));
-    cmd_sub_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, std::bind(&Simulator::onCmd, this, std::placeholders::_1));
-    rviz_telep_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 1, std::bind(&Simulator::onRvizTelep, this, std::placeholders::_1));
+    perception_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+        "/arussim/perception", 10);
+    marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(
+        "/arussim/vehicle_visualization", 1);
+
+    slow_timer_ = this->create_wall_timer(
+        std::chrono::milliseconds((int)(1000/kSensorRate)), 
+        std::bind(&Simulator::onSlowTimer, this));
+    fast_timer_ = this->create_wall_timer(
+        std::chrono::milliseconds((int)(1000/kStateUpdateRate)), 
+        std::bind(&Simulator::onFastTimer, this));
+        
+    cmd_sub_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, 
+        std::bind(&Simulator::onCmd, this, std::placeholders::_1));
+    rviz_telep_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+        "/initialpose", 1, std::bind(&Simulator::onRvizTelep, this, std::placeholders::_1));
 
 
     // Load the car mesh
@@ -67,7 +77,8 @@ Simulator::Simulator() : Node("simulator")
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Couldn't read file %s", filename.c_str());
         return;
     }
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Loaded %ld data points from %s", track_.points.size(), filename.c_str());
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Loaded %ld data points from %s", 
+                track_.points.size(), filename.c_str());
 
 }
 
@@ -140,7 +151,8 @@ void Simulator::onCmd(const custom_msgs::msg::Cmd::SharedPtr msg)
 
 void Simulator::onRvizTelep(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
 {
-    tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
+    tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y,
+                      msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
     tf2::Matrix3x3 mat(q);
     double roll, pitch, yaw;
     mat.getRPY(roll, pitch, yaw);
