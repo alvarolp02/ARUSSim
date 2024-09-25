@@ -38,15 +38,15 @@ Simulator::Simulator() : Node("simulator")
 
     slow_timer_ = this->create_wall_timer(
         std::chrono::milliseconds((int)(1000/kSensorRate)), 
-        std::bind(&Simulator::onSlowTimer, this));
+        std::bind(&Simulator::on_slow_timer, this));
     fast_timer_ = this->create_wall_timer(
         std::chrono::milliseconds((int)(1000/kStateUpdateRate)), 
-        std::bind(&Simulator::onFastTimer, this));
-        
+        std::bind(&Simulator::on_fast_timer, this));
+
     cmd_sub_ = this->create_subscription<custom_msgs::msg::Cmd>("/arussim/cmd", 1, 
-        std::bind(&Simulator::onCmd, this, std::placeholders::_1));
+        std::bind(&Simulator::cmd_callback, this, std::placeholders::_1));
     rviz_telep_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-        "/initialpose", 1, std::bind(&Simulator::onRvizTelep, this, std::placeholders::_1));
+        "/initialpose", 1, std::bind(&Simulator::rviz_telep_callback, this, std::placeholders::_1));
 
 
     // Load the car mesh
@@ -82,7 +82,7 @@ Simulator::Simulator() : Node("simulator")
 
 }
 
-void Simulator::onSlowTimer()
+void Simulator::on_slow_timer()
 {   
     // Update track
     sensor_msgs::msg::PointCloud2 track_msg;
@@ -121,10 +121,10 @@ void Simulator::onSlowTimer()
     perception_pub_->publish(perception_msg);
 }
 
-void Simulator::onFastTimer()
+void Simulator::on_fast_timer()
 {   
     // Update state and broadcast transform
-    updateState();
+    update_state();
     
     auto message = custom_msgs::msg::State();
     message.x = x_;
@@ -142,14 +142,14 @@ void Simulator::onFastTimer()
     marker_pub_->publish(marker_);
 }
 
-void Simulator::onCmd(const custom_msgs::msg::Cmd::SharedPtr msg)
+void Simulator::cmd_callback(const custom_msgs::msg::Cmd::SharedPtr msg)
 {
     input_acc_ = msg->acc;
     input_delta_ = msg->delta;
     time_last_cmd_ = clock_->now();
 }
 
-void Simulator::onRvizTelep(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+void Simulator::rviz_telep_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
 {
     tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y,
                       msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
@@ -165,7 +165,7 @@ void Simulator::onRvizTelep(const geometry_msgs::msg::PoseWithCovarianceStamped:
     r_ = 0;
 }
 
-void Simulator::updateState()
+void Simulator::update_state()
 {
     rclcpp::Time current_time = clock_->now();
     if((current_time - time_last_cmd_).seconds() > 0.2 && vx_ != 0)
