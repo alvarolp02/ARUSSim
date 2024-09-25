@@ -12,7 +12,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <pcl/io/pcd_io.h>
 #include <iostream>
-#include "PointXYZColorScore.h"
+#include "ConeXYZColorScore.h"
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 
@@ -30,19 +30,29 @@ class Simulator : public rclcpp::Node
     double vy_ = 0;
     double r_ = 0;
 
+    std::string kTrackName;
+    double kFrictionCoef;
+    double kStateUpdateRate;
+    double kMass;
+    double kWheelBase;
+    double kFOV;
+    double kSensorRate;
+    double kNoise;
+    double kMinPerceptionX;
+
     rclcpp::Clock::SharedPtr clock_;
     rclcpp::Time time_last_cmd_;
     double input_acc_;
     double input_delta_;
 
     visualization_msgs::msg::Marker marker_;
-    pcl::PointCloud<PointXYZColorScore> track_;
+    pcl::PointCloud<ConeXYZColorScore> track_;
 
-    void onSlowTimer();
-    void onFastTimer();
-    void onCmd(const custom_msgs::msg::Cmd::SharedPtr msg);
-    void onRvizTelep(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
-    void updateState();
+    void on_slow_timer();
+    void on_fast_timer();
+    void cmd_callback(const custom_msgs::msg::Cmd::SharedPtr msg);
+    void rviz_telep_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+    void update_state();
     void broadcast_transform();
 
 

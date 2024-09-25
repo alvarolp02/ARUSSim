@@ -3,7 +3,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 
-struct PointXYZColorScore {
+struct ConeXYZColorScore {
     PCL_ADD_POINT4D;  
     int color;
     float score;
@@ -11,8 +11,8 @@ struct PointXYZColorScore {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     // Constructors
-    PointXYZColorScore() : color(0), score(0) {}
-    PointXYZColorScore(float x, float y, float z, int color, float score) {
+    ConeXYZColorScore() : color(0), score(0) {}
+    ConeXYZColorScore(float x, float y, float z, int color, float score) {
         this->x = x;
         this->y = y;
         this->z = z;
@@ -23,7 +23,7 @@ struct PointXYZColorScore {
 };
 
 
-POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZColorScore,       
+POINT_CLOUD_REGISTER_POINT_STRUCT (ConeXYZColorScore,       
                                    (float, x, x)
                                    (float, y, y)
                                    (float, z, z)
