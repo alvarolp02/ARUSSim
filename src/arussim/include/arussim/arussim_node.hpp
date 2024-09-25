@@ -12,7 +12,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <pcl/io/pcd_io.h>
 #include <iostream>
-#include "PointXYZColorScore.h"
+#include "ConeXYZColorScore.h"
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 
@@ -36,7 +36,7 @@ class Simulator : public rclcpp::Node
     double input_delta_;
 
     visualization_msgs::msg::Marker marker_;
-    pcl::PointCloud<PointXYZColorScore> track_;
+    pcl::PointCloud<ConeXYZColorScore> track_;
 
     void onSlowTimer();
     void onFastTimer();

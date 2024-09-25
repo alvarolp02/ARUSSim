@@ -73,7 +73,7 @@ Simulator::Simulator() : Node("simulator")
     // Load the track pointcloud
     std::string package_path = ament_index_cpp::get_package_share_directory("arussim");
     std::string filename = package_path+"/resources/tracks/"+track;
-    if (pcl::io::loadPCDFile<PointXYZColorScore>(filename, track_) == -1)
+    if (pcl::io::loadPCDFile<ConeXYZColorScore>(filename, track_) == -1)
     {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Couldn't read file %s", filename.c_str());
         return;
@@ -96,13 +96,13 @@ void Simulator::onSlowTimer()
     std::mt19937 gen(rd());
     std::normal_distribution<> dist(0.0, noise);
 
-    auto perception_cloud = pcl::PointCloud<PointXYZColorScore>();
+    auto perception_cloud = pcl::PointCloud<ConeXYZColorScore>();
     for (auto &point : track_.points)
     {
         double d = std::sqrt(std::pow(point.x - x_, 2) + std::pow(point.y - y_, 2));
         if (d < fov)
         {
-            PointXYZColorScore p;
+            ConeXYZColorScore p;
             p.x = (point.x - x_)*std::cos(yaw_) + (point.y - y_)*std::sin(yaw_) + dist(gen);
             p.y = -(point.x - x_)*std::sin(yaw_) + (point.y - y_)*std::cos(yaw_) + dist(gen);
             p.z = 0.0;
