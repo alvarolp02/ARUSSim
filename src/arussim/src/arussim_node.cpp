@@ -1,8 +1,20 @@
+/**
+ * @file arussim_node.cpp
+ * @brief Simulator node for the ARUS Team (ARUSim)
+ */
+
 #include "arussim/arussim_node.hpp"
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <random>
 
-
+/**
+ * @class Simulator
+ * @brief Simulator class for the ARUS Team (ARUSim).
+ * 
+ * This class simulates the behavior of a vehicle in a racing environment, 
+ * handling the simulation of state updates, sensor data generation, and broadcasting
+ * transforms to visualize the vehicle and track in RViz.
+ */
 Simulator::Simulator() : Node("simulator")
 {   
     this->declare_parameter<std::string>("track", "FSG.pcd");
@@ -82,6 +94,12 @@ Simulator::Simulator() : Node("simulator")
 
 }
 
+/**
+ * @brief Slow timer callback for sensor data updates.
+ * 
+ * This method updates the sensor data by publishing the track and generating 
+ * random noise to simulate sensor inaccuracy. It also publishes the perception data.
+ */
 void Simulator::on_slow_timer()
 {   
     // Update track
@@ -121,6 +139,12 @@ void Simulator::on_slow_timer()
     perception_pub_->publish(perception_msg);
 }
 
+/**
+ * @brief Fast timer callback for state updates.
+ * 
+ * This method handles vehicle state updates, broadcasting the transform 
+ * and updating the vehicle marker in RViz.
+ */
 void Simulator::on_fast_timer()
 {   
     // Update state and broadcast transform
@@ -142,6 +166,14 @@ void Simulator::on_fast_timer()
     marker_pub_->publish(marker_);
 }
 
+/**
+ * @brief Callback for receiving control commands.
+ * 
+ * This method updates the vehicle's acceleration and steering angle based on 
+ * incoming commands.
+ * 
+ * @param msg Incoming control command message.
+ */
 void Simulator::cmd_callback(const custom_msgs::msg::Cmd::SharedPtr msg)
 {
     input_acc_ = msg->acc;
@@ -149,6 +181,13 @@ void Simulator::cmd_callback(const custom_msgs::msg::Cmd::SharedPtr msg)
     time_last_cmd_ = clock_->now();
 }
 
+/**
+ * @brief Callback for receiving RViz teleportation commands.
+ * 
+ * This method teleports the vehicle to a new pose based on incoming RViz commands.
+ * 
+ * @param msg Incoming pose message from RViz.
+ */
 void Simulator::rviz_telep_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
 {
     tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y,
@@ -165,6 +204,11 @@ void Simulator::rviz_telep_callback(const geometry_msgs::msg::PoseWithCovariance
     r_ = 0;
 }
 
+/**
+ * @brief Updates the vehicle state based on the current input and model equations.
+ * 
+ * This method updates the position, velocity, and orientation of the vehicle.
+ */
 void Simulator::update_state()
 {
     rclcpp::Time current_time = clock_->now();
@@ -187,6 +231,12 @@ void Simulator::update_state()
     vx_ += input_acc_ * dt;
 }
 
+/**
+ * @brief Broadcasts the transform of the vehicle to the TF tree.
+ * 
+ * This method sends the current pose of the vehicle to the ROS TF system
+ * to be visualized in RViz or used in other nodes.
+ */
 void Simulator::broadcast_transform()
   {
     // Create a TransformStamped message
@@ -214,6 +264,15 @@ void Simulator::broadcast_transform()
     tf_broadcaster_->sendTransform(transform_stamped);
   }
 
+/**
+ * @brief Main entry point for the simulator node.
+ * 
+ * This initializes the ROS 2 system and starts spinning the Simulator node.
+ * 
+ * @param argc Number of command line arguments.
+ * @param argv Array of command line arguments.
+ * @return int Exit status of the application.
+ */
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
