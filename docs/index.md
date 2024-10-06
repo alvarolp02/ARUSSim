@@ -10,6 +10,9 @@ This is the **driverless ARUSSim pipeline documentation** of ARUSfs. It is divid
 content/howToDoc
 
 ```
+## Doxygen documentation
+
+For the full Doxygen auto-generated documentation, please visit the following [link](https://arusfs.github.io/ARUSSim/doxygen)
 
 ## Download
 
