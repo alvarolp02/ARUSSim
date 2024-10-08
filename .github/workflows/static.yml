@@ -41,6 +41,12 @@ jobs:
           cd docs
           make html
 
+      - name: Install Doxygen
+        run: sudo apt-get install doxygen graphviz
+
+      - name: Generate Documentation
+        run: doxygen Doxyfile
+
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
