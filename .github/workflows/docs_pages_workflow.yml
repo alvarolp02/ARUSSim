@@ -2,10 +2,8 @@ name: docs_pages_workflow
 
 on:
   push:
-    branches: 
+    branches:
       - main
-      - feature/doxygen_doc
-      - doc
 
 jobs:
 
