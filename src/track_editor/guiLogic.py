@@ -36,7 +36,6 @@ class guiLogic():
     self.originENURotation = d2r * np.array([0,0,45])
     self.ancho = 0
     self.dist_cones = 0
-    self.ConosArus = []
   # https://stackoverflow.com/questions/27161533/find-the-shortest-distance-between-a-point-and-line-segments-not-line
   def lineseg_dists(self, p, a, b):
       """Cartesian distance from point to line segment
@@ -187,7 +186,7 @@ class guiLogic():
     self.lanesConnectionLeft = []
     self.lanesConnectionRight = []
     self.timeKeepingGates = []
-    conesUnknown, left, right, tk, connected, start, earthToTrack = mapFile.readPCD(path)
+    conesUnknown, left, right, tk, connected, start, earthToTrack, orangeCones = mapFile.readPCD(path)
     self.startPosition = start[0]
     self.startOrientation = start[1]
     self.originGeodeticCoordinates = earthToTrack[0]
@@ -202,6 +201,9 @@ class guiLogic():
       l = [i[0], mapFile.stringToLandmarkType(i[1])]
       self.cones.append(l)
       self.lanesConnectionRight.append(l)
+    for i in orangeCones:
+      l = [i[0], mapFile.stringToLandmarkType(i[1])]
+      self.cones.append(l)
     duringLine = False
     for i in tk:
       l = [i[0], mapFile.stringToLandmarkType(i[1])]
@@ -237,4 +239,4 @@ class guiLogic():
       timeKeeping.append(i[0])
       timeKeeping.append(i[1])
 
-    mapFile.writeYaml(path, conesUnknown, self.lanesConnectionLeft[:-1], self.lanesConnectionRight[:-1], timeKeeping, [self.startPosition, self.startOrientation], [self.originGeodeticCoordinates, self.originENURotation], self.ConosArus)
+    mapFile.writeYaml(path, conesUnknown, self.lanesConnectionLeft, self.lanesConnectionRight, timeKeeping, [self.startPosition, self.startOrientation], [self.originGeodeticCoordinates, self.originENURotation])

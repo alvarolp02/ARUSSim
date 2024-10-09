@@ -410,12 +410,12 @@ class Ui_MainWindow(object):
             for x, y in conos_exteriores:
                 cone = ((x, y, 0), guiLogic.landmarkType.BLUE)
                 self.graphicsView.addCone(cone)
-                self.guiLogic.ConosArus.append(cone)
+                self.guiLogic.lanesConnectionLeft.append(cone)
 
             for x, y in conos_interiores:
                 cone = ((x, y, 0), guiLogic.landmarkType.YELLOW)
                 self.graphicsView.addCone(cone)
-                self.guiLogic.ConosArus.append(cone)
+                self.guiLogic.lanesConnectionRight.append(cone)
 
     def conesOnMap(self):
         self.cones = []
@@ -428,7 +428,6 @@ class Ui_MainWindow(object):
     def deleteCircuit(self):
         self.graphicsView.removeAllCones()
         self.graphicsView.resetAll()
-        self.guiLogic.ConosArus.clear()
         self.graphicsView.update()
 
     def _creatToolbarOptions(self):

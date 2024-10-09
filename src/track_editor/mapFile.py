@@ -58,13 +58,15 @@ def intToLandmarkType(int):
     return "small-orange"
   elif(int == 3):
     return "big-orange"
+  elif(int == 4):
+    return "timekeeping"
   return "unknown"
 
-def writeYaml(fileName, cones, leftLane, rightLane, timeKeeping, startPose, earthToTrack, ConosArus):
+def writeYaml(fileName, cones, leftLane, rightLane, timeKeeping, startPose, earthToTrack):
     path = Path(fileName)
 
     # Combinar todos los conos
-    all_cones = cones + leftLane + rightLane + ConosArus
+    all_cones = cones + leftLane + rightLane  + timeKeeping
 
     # Cabecera del archivo .pcd
     header = f"""# .PCD v0.7 - Point Cloud Data file format
@@ -134,6 +136,7 @@ def readPCD(fileName):
     leftCones = []
     rightCones = []
     timekeepingCones = []
+    orangeCones = []
     
     data_section = False
     lanesFirstWithLastConnected = False
@@ -163,9 +166,11 @@ def readPCD(fileName):
             elif cone_type == 1:
                 rightCones.append([position, intToLandmarkType(cone_type)])
             elif cone_type == 2:
-                timekeepingCones.append([position, intToLandmarkType(cone_type)])
+                orangeCones.append([position, intToLandmarkType(cone_type)])
             elif cone_type == 3:
+                orangeCones.append([position, intToLandmarkType(cone_type)])
+            elif cone_type == 4:
                 timekeepingCones.append([position, intToLandmarkType(cone_type)])
 
     
-    return (unknownCones, leftCones, rightCones, timekeepingCones, lanesFirstWithLastConnected, startPose, earthToTrack)
+    return (unknownCones, leftCones, rightCones, timekeepingCones, lanesFirstWithLastConnected, startPose, earthToTrack, orangeCones)
