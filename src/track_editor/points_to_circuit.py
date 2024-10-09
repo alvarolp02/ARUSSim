@@ -68,10 +68,10 @@ def smooth_and_expand_points(points, offset, num_points, min_distance=5):
 
     # Add the first outer and inner points
     for i in range(num_points):
-        outer_point = (x_smooth[i] + offset * normal_x[i], 
-                       y_smooth[i] + offset * normal_y[i])
-        inner_point = (x_smooth[i] - offset * normal_x[i], 
-                       y_smooth[i] - offset * normal_y[i])
+        outer_point = (x_smooth[i] + offset/2 * normal_x[i], 
+                       y_smooth[i] + offset/2 * normal_y[i])
+        inner_point = (x_smooth[i] - offset/2 * normal_x[i], 
+                       y_smooth[i] - offset/2 * normal_y[i])
         
         # If it is the first cone or the distance between the last point in the list and the one to be added is greater than or equal to the minimum distance, add the point
         if i == 0 or distance(outer_cones[-1], outer_point) >= min_distance:
