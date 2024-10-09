@@ -36,62 +36,63 @@ def stringToLandmarkType(string):
 
 def landmarkTypeToString(type):
   if(type == landmarkType.BLUE):
-    return "blue"
+    return "0"
   elif(type == landmarkType.YELLOW):
-    return "yellow"
+    return "1"
   elif(type == landmarkType.ORANGE):
-    return "small-orange"
+    return "2"
   elif(type == landmarkType.BIG_ORANGE):
-    return "big-orange"
+    return "3"
   elif(type == landmarkType.TIMEKEEPING):
     return "timekeeping"
   elif(type == landmarkType.INVISIBLE):
     return "invisible"
   return "unknown"
 
-def writeYaml(fileName, cones, leftLane, rightLane, timeKeeping, startPose, earthToTrack):
+def intToLandmarkType(int):
+  if(int == 0):
+    return "blue"
+  elif(int == 1):
+    return "yellow"
+  elif(int == 2):
+    return "small-orange"
+  elif(int == 3):
+    return "big-orange"
+  return "unknown"
+
+def writeYaml(fileName, cones, leftLane, rightLane, timeKeeping, startPose, earthToTrack, ConosArus):
     path = Path(fileName)
-    start_position = startPose[0]
-    start_orientation = startPose[1]
-    originGeodeticCoordinates = earthToTrack[0]
-    originENURotation = earthToTrack[1]
 
-    left = []
-    right = []
-    time_keeping = []
-    unknown = []
-    for c in cones:
-      unknown.append({"position": f"[{c[0][0]}, {c[0][1]}, {c[0][2]}]", "class": landmarkTypeToString(c[1])})
-    for c in leftLane:
-      left.append({"position": f"[{c[0][0]}, {c[0][1]}, {c[0][2]}]", "class": landmarkTypeToString(c[1])})
-    for c in rightLane:
-      right.append({"position": f"[{c[0][0]}, {c[0][1]}, {c[0][2]}]", "class": landmarkTypeToString(c[1])})
-    for c in timeKeeping:
-      time_keeping.append({"position": f"[{c[0][0]}, {c[0][1]}, {c[0][2]}]", "class": landmarkTypeToString(c[1])})
+    # Combinar todos los conos
+    all_cones = cones + leftLane + rightLane + ConosArus
 
-    version_number = 1.0
-    yaml_dict = OrderedDict({
-      "track": OrderedDict({
-        "version": str(version_number),
-        "lanesFirstWithLastConnected" : True,
-        "start": OrderedDict({
-            "position": f'[{start_position[0]}, {start_position[1]}, {start_position[2]}]',
-            "orientation": f'[{start_orientation[0]}, {start_orientation[1]}, {start_orientation[2]}]'}),
-        "earthToTrack": OrderedDict({
-            "position": f'[{originGeodeticCoordinates[0]}, {originGeodeticCoordinates[1]}, {originGeodeticCoordinates[2]}]',
-            "orientation": f'[{originENURotation[0]}, {originENURotation[1]}, {originENURotation[2]}]'}),
-        "left": left,
-        "right": right,
-        "time_keeping": time_keeping,
-        "unknown": unknown
-        })
-      })
-    with open(path, 'w+') as f:
-      yaml_dumper = My_Yaml_Dump(f)
-      yaml = YAML()
-      yaml.dump(yaml_dict, yaml_dumper)
-    return
+    # Cabecera del archivo .pcd
+    header = f"""# .PCD v0.7 - Point Cloud Data file format
+VERSION 0.7
+FIELDS x y z color score
+SIZE 4 4 4 4 4
+TYPE F F F I F
+COUNT 1 1 1 1 1
+WIDTH {len(all_cones)}
+HEIGHT 1
+VIEWPOINT 0 0 0 1 0 0 0
+POINTS {len(all_cones)}
+DATA ascii
+"""
 
+    # Formatear los puntos (conos)
+    points = []
+    for cono in all_cones:
+        position = cono[0]
+        cone_type = landmarkTypeToString(cono[1])
+        # Formato: "x y z color score"
+        point_line = f"{position[0]} {position[1]} {int(0)} {cone_type} 1"
+        points.append(point_line)
+
+    # Abrir el archivo en modo de escritura y escribir la cabecera y los puntos
+    with open(path, 'w') as f:
+        f.write(header)
+        f.write("\n".join(points))
 
 def readYaml(fileName):
     path = Path(fileName)
@@ -122,3 +123,49 @@ def readYaml(fileName):
     for c in data['track']['unknown']:
         unkownCones.append([np.array(c['position']), c['class']])
     return (unkownCones, leftCones, rightCones, timekeeping, lanesFirstWithLastConnected, startPose, earthToTrack)
+
+def readPCD(fileName):
+    path = Path(fileName)
+    
+    with open(path, 'r') as f:
+        lines = f.readlines()
+
+    unknownCones = []
+    leftCones = []
+    rightCones = []
+    timekeepingCones = []
+    
+    data_section = False
+    lanesFirstWithLastConnected = False
+    startPose = [np.zeros(3), np.zeros(3)]  
+    earthToTrack = [np.zeros(3), np.zeros(3)] 
+    
+    for line in lines:
+        line = line.strip()
+        
+        if line.startswith("#") or not line:
+            continue
+        
+        if line.startswith("DATA ascii"):
+            data_section = True
+            continue
+        
+        if data_section:
+            parts = line.split()
+            if len(parts) != 5:
+                continue
+            
+            position = np.array([float(parts[0]), float(parts[1]), float(parts[2])])
+            cone_type = float(parts[3])
+            
+            if cone_type == 0:
+                leftCones.append([position, intToLandmarkType(cone_type)])
+            elif cone_type == 1:
+                rightCones.append([position, intToLandmarkType(cone_type)])
+            elif cone_type == 2:
+                timekeepingCones.append([position, intToLandmarkType(cone_type)])
+            elif cone_type == 3:
+                timekeepingCones.append([position, intToLandmarkType(cone_type)])
+
+    
+    return (unknownCones, leftCones, rightCones, timekeepingCones, lanesFirstWithLastConnected, startPose, earthToTrack)

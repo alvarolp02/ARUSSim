@@ -187,7 +187,7 @@ class guiLogic():
     self.lanesConnectionLeft = []
     self.lanesConnectionRight = []
     self.timeKeepingGates = []
-    conesUnknown, left, right, tk, connected, start, earthToTrack = mapFile.readYaml(path)
+    conesUnknown, left, right, tk, connected, start, earthToTrack = mapFile.readPCD(path)
     self.startPosition = start[0]
     self.startOrientation = start[1]
     self.originGeodeticCoordinates = earthToTrack[0]
@@ -236,4 +236,5 @@ class guiLogic():
     for i in self.timeKeepingGates:
       timeKeeping.append(i[0])
       timeKeeping.append(i[1])
-    mapFile.writeYaml(path, conesUnknown, self.lanesConnectionLeft[:-1], self.lanesConnectionRight[:-1], timeKeeping, [self.startPosition, self.startOrientation], [self.originGeodeticCoordinates, self.originENURotation])
+
+    mapFile.writeYaml(path, conesUnknown, self.lanesConnectionLeft[:-1], self.lanesConnectionRight[:-1], timeKeeping, [self.startPosition, self.startOrientation], [self.originGeodeticCoordinates, self.originENURotation], self.ConosArus)

@@ -428,6 +428,7 @@ class Ui_MainWindow(object):
     def deleteCircuit(self):
         self.graphicsView.removeAllCones()
         self.graphicsView.resetAll()
+        self.guiLogic.ConosArus.clear()
         self.graphicsView.update()
 
     def _creatToolbarOptions(self):
