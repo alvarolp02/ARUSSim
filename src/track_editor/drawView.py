@@ -120,8 +120,13 @@ class drawView(QGraphicsView):
 
 
     def delteteSelected(self):
-      for i in self.getSelected():
-          self.removeCone(i)
+        for i in self.getSelected():
+            self.removeCone(i)
+            # Comparar por la posición del cono en lugar de la tupla completa
+            for cono in self.guiLogic.ConosArus:
+                if np.array_equal(i[0], cono[0]):  # Comparar solo la posición
+                    self.guiLogic.ConosArus.remove(cono)
+                    break
 
     def changeSelectedType(self, type):
         selected = self.getSelected()

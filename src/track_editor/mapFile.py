@@ -44,10 +44,10 @@ def landmarkTypeToString(type):
   elif(type == landmarkType.BIG_ORANGE):
     return "3"
   elif(type == landmarkType.TIMEKEEPING):
-    return "timekeeping"
+    return "4"
   elif(type == landmarkType.INVISIBLE):
-    return "invisible"
-  return "unknown"
+    return "5"
+  return "6"
 
 def intToLandmarkType(int):
   if(int == 0):
