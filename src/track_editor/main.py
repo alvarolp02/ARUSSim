@@ -11,6 +11,9 @@ import guiLogic
 
 import numpy as np
 
+from points_to_circuit import *
+from drawView import *
+from drawView import *
 
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -71,7 +74,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.graphicsView = drawView.drawView(self.centralwidget)
+        self.graphicsView = drawView(self.centralwidget)
         self.graphicsView.setRenderHints(QtGui.QPainter.HighQualityAntialiasing|QtGui.QPainter.SmoothPixmapTransform|QtGui.QPainter.TextAntialiasing)
         self.graphicsView.setObjectName("graphicsView")
         self.horizontalLayout.addWidget(self.graphicsView)
@@ -113,12 +116,14 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.coneUnknownOption)
         self.toolBar.addAction(self.laneConnectOption)
         self.toolBar.insertSeparator(self.laneConnectOption)
+        self.toolBar.addAction(self.pointsToCircuit)
         self.toolBar.addAction(self.timeKeepingLineOption)
         self.toolBar.insertSeparator(self.startPoseOption)
         self.toolBar.addAction(self.startPoseOption)
         self.toolBar.addAction(self.gnssSettingsOption)
         self.toolBar.addAction(self.rulesComplianceCheckAction)
         self.toolBar.insertSeparator(self.rulesComplianceCheckAction)
+        self.toolBar.addAction(self.deleteAll)
         for o in self.toolBar.actions():
             o.setCheckable(True)
         self.lastLandmarkOption = ui.coneBlueOption
@@ -136,12 +141,12 @@ class Ui_MainWindow(object):
         self.modeActionMap[guiLogic.landmarkType.INVISIBLE] = self.coneInvisibleOption
 
     def save_file_dialog(self):
-        file = ""
+        file = ".pcd"
         filename, ok = QFileDialog.getSaveFileName(
             self.MainWindow,
             "Select a File",
             file, 
-            "Pacsim map yaml (*.yaml)"
+            "Circuit (*)"
         )
         if filename:
             self.guiLogic.writeMapFile(filename)
@@ -152,7 +157,7 @@ class Ui_MainWindow(object):
             self.MainWindow,
             "Select a File",
             file, 
-            "Pacsim map yaml (*.yaml)"
+            "Circuit (*)"
         )
         if filename:
             self.graphicsView.removeAllCones()
@@ -354,6 +359,77 @@ class Ui_MainWindow(object):
           self.graphicsView.updateCompass()
           self.widget = None
 
+    def TrackEditorSettings(self):
+      if(self.widget):
+          self.widget.close()
+      self.gnssSettingsOption.setChecked(False)
+      self.widget = QDialog(parent=self.MainWindow)
+      self.widget.setWindowFlags(self.widget.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
+      self.widget.setWindowTitle("Ajustes del circuito")
+      self.ancho = QLineEdit()
+      self.ancho.setValidator(QDoubleValidator())
+      self.ancho.setValidator(QRegExpValidator(QRegExp("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?")))
+      self.ancho.setText(str())
+      self.dist_cones = QLineEdit()
+      self.dist_cones.setValidator(QDoubleValidator())
+      self.dist_cones.setValidator(QRegExpValidator(QRegExp("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?")))
+      self.dist_cones.setText(str())
+
+      flo = QFormLayout()
+      flo.addRow("Ancho del circuito",self.ancho)
+      flo.addRow("Distancia entre conos",self.dist_cones)
+
+
+      button = QPushButton("Set")
+      button.clicked.connect(self.saveTrackEditorSettings)
+      flo.addRow(button)
+
+      self.widget.setLayout(flo)
+      self.widget.show()
+
+    def saveTrackEditorSettings(self):
+        anyEmpty = len(self.ancho.text()) == 0
+        if not anyEmpty:
+            self.guiLogic.ancho = self.ancho.text()
+            self.guiLogic.dist_cones = self.dist_cones.text()
+            self.widget.close()
+            self.deleteAndNewCircuit()
+            self.widget = None
+            self.guiLogic.ancho = str()
+            self.guiLogic.dist_cones = str()
+
+
+    def deleteAndNewCircuit(self):
+        if len(self.guiLogic.cones) > 0:
+            cones = self.conesOnMap()
+            self.graphicsView.removeAllCones()
+
+            conos_exteriores = smooth_and_expand_points(cones, float(self.guiLogic.ancho), len(cones)*10, float(self.guiLogic.dist_cones))[0]
+            conos_interiores = smooth_and_expand_points(cones, float(self.guiLogic.ancho), len(cones)*10, float(self.guiLogic.dist_cones))[1]
+
+            for x, y in conos_exteriores:
+                cone = ((x, y, 0), guiLogic.landmarkType.BLUE)
+                self.graphicsView.addCone(cone)
+                self.guiLogic.ConosArus.append(cone)
+
+            for x, y in conos_interiores:
+                cone = ((x, y, 0), guiLogic.landmarkType.YELLOW)
+                self.graphicsView.addCone(cone)
+                self.guiLogic.ConosArus.append(cone)
+
+    def conesOnMap(self):
+        self.cones = []
+        for x in self.guiLogic.cones:
+            self.cones.append((x[0][0], x[0][1]))
+
+        #print(f'Conos seleccionados: {self.cones}')
+        return self.cones
+    
+    def deleteCircuit(self):
+        self.graphicsView.removeAllCones()
+        self.graphicsView.resetAll()
+        self.graphicsView.update()
+
     def _creatToolbarOptions(self):
         self.coneUnknownOption = QAction()
         self.coneUnknownOption.setText("Unknown cone (0)")
@@ -388,6 +464,16 @@ class Ui_MainWindow(object):
         self.laneConnectOption.setText("Connes lanes (C)")
         self.laneConnectOption.setIcon(QIcon("icons/laneConnectIcon.png"))
         self.laneConnectOption.triggered.connect(lambda: self.activateLaneConnection())
+
+        self.pointsToCircuit = QAction()
+        self.pointsToCircuit.setText("From points to circuit")
+        self.pointsToCircuit.setIcon(QIcon("icons/peru.jpg"))
+        self.pointsToCircuit.triggered.connect(lambda: self.TrackEditorSettings())
+
+        self.deleteAll = QAction()
+        self.deleteAll.setText("Delete all cones")
+        self.deleteAll.setIcon(QIcon("icons/papelera.png"))
+        self.deleteAll.triggered.connect(lambda: self.deleteCircuit())
 
         self.timeKeepingLineOption = QAction()
         self.timeKeepingLineOption.setText("Timekeeping (T)")

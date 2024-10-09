@@ -124,27 +124,31 @@ class drawView(QGraphicsView):
           self.removeCone(i)
 
     def changeSelectedType(self, type):
-      selected = self.getSelected()
-      for i in selected:
-          posOriginal = self.coneMap[i]
-          if(posOriginal[1] == guiLogic.landmarkType.TIMEKEEPING):
-             continue
-          pos = self.worldToPosition(self.coneMap[i][0])
-          if(type == guiLogic.landmarkType.BLUE):
-            posOriginal[1] = guiLogic.landmarkType.BLUE
-            self.scene().changeConeType(i,type)
-          elif(type == guiLogic.landmarkType.YELLOW):
-            posOriginal[1] = guiLogic.landmarkType.YELLOW
-            self.scene().changeConeType(i,type)
-          elif(type == guiLogic.landmarkType.ORANGE):
-            posOriginal[1] = guiLogic.landmarkType.ORANGE
-            self.scene().changeConeType(i,type)
-          elif(type == guiLogic.landmarkType.BIG_ORANGE):
-            posOriginal[1] = guiLogic.landmarkType.BIG_ORANGE
-            self.scene().changeConeType(i,type)
-          elif(type == guiLogic.landmarkType.UNDEFINED):
-            posOriginal[1] = guiLogic.landmarkType.UNDEFINED
-            self.scene().changeConeType(i,type)
+        selected = self.getSelected()
+        for i in selected:
+            posOriginal = list(self.coneMap[i])  # We convert the tuple into a list so we can modify it
+            if posOriginal[1] == guiLogic.landmarkType.TIMEKEEPING:
+                continue
+
+            # We update the cone type in the list
+            if type == guiLogic.landmarkType.BLUE:
+                posOriginal[1] = guiLogic.landmarkType.BLUE
+                self.scene().changeConeType(i, type)
+            elif type == guiLogic.landmarkType.YELLOW:
+                posOriginal[1] = guiLogic.landmarkType.YELLOW
+                self.scene().changeConeType(i, type)
+            elif type == guiLogic.landmarkType.ORANGE:
+                posOriginal[1] = guiLogic.landmarkType.ORANGE
+                self.scene().changeConeType(i, type)
+            elif type == guiLogic.landmarkType.BIG_ORANGE:
+                posOriginal[1] = guiLogic.landmarkType.BIG_ORANGE
+                self.scene().changeConeType(i, type)
+            elif type == guiLogic.landmarkType.UNDEFINED:
+                posOriginal[1] = guiLogic.landmarkType.UNDEFINED
+                self.scene().changeConeType(i, type)
+
+            # We assign the modified tuple again to coneMap
+            self.coneMap[i] = tuple(posOriginal)  # We convert back to tuple if necessary
 
     def rightClickMenu(self, pos):
         # if self.selectionModel().selection().indexes():
@@ -521,8 +525,17 @@ class drawView(QGraphicsView):
     def updatePositions(self):
         for i in self.coneMap:
             worldPos = self.positionToWorld(i)
-            conePos = self.coneMap[i]
-            np.copyto(conePos[0], worldPos)
+            conePos = list(self.coneMap[i])
+            
+            # Convert conePos[0] to a numpy array
+            if isinstance(conePos[0], tuple):
+                conePos[0] = np.array(conePos[0])
+
+            conePos[0] = worldPos
+
+            self.coneMap[i] = tuple(conePos)
+
+
 
     def resetLaneConnections(self):
         for i in self.leftLines:
