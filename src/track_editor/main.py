@@ -403,7 +403,7 @@ class Ui_MainWindow(object):
             cones = self.conesOnMap()
             self.graphicsView.removeAllCones()
 
-            outer_cones, inner_cones = smooth_and_expand_points(cones, float(self.guiLogic.width), len(cones)*10, float(self.guiLogic.dist_cones))[0]
+            outer_cones, inner_cones = smooth_and_expand_points(cones, float(self.guiLogic.width), len(cones)*10, float(self.guiLogic.dist_cones))
 
             for x, y in outer_cones:
                 cone = ((x, y, 0), guiLogic.landmarkType.BLUE)
