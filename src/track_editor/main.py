@@ -366,18 +366,18 @@ class Ui_MainWindow(object):
       self.widget = QDialog(parent=self.MainWindow)
       self.widget.setWindowFlags(self.widget.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
       self.widget.setWindowTitle("Ajustes del circuito")
-      self.ancho = QLineEdit()
-      self.ancho.setValidator(QDoubleValidator())
-      self.ancho.setValidator(QRegExpValidator(QRegExp("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?")))
-      self.ancho.setText(str())
+      self.width = QLineEdit()
+      self.width.setValidator(QDoubleValidator())
+      self.width.setValidator(QRegExpValidator(QRegExp("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?")))
+      self.width.setText(str())
       self.dist_cones = QLineEdit()
       self.dist_cones.setValidator(QDoubleValidator())
       self.dist_cones.setValidator(QRegExpValidator(QRegExp("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?")))
       self.dist_cones.setText(str())
 
       flo = QFormLayout()
-      flo.addRow("Ancho del circuito",self.ancho)
-      flo.addRow("Distancia entre conos",self.dist_cones)
+      flo.addRow("Circuit width",self.width)
+      flo.addRow("Distance between cones",self.dist_cones)
 
 
       button = QPushButton("Set")
@@ -388,14 +388,14 @@ class Ui_MainWindow(object):
       self.widget.show()
 
     def saveTrackEditorSettings(self):
-        anyEmpty = len(self.ancho.text()) == 0
+        anyEmpty = len(self.width.text()) == 0
         if not anyEmpty:
-            self.guiLogic.ancho = self.ancho.text()
+            self.guiLogic.width = self.width.text()
             self.guiLogic.dist_cones = self.dist_cones.text()
             self.widget.close()
             self.deleteAndNewCircuit()
             self.widget = None
-            self.guiLogic.ancho = str()
+            self.guiLogic.width = str()
             self.guiLogic.dist_cones = str()
 
 
@@ -404,8 +404,8 @@ class Ui_MainWindow(object):
             cones = self.conesOnMap()
             self.graphicsView.removeAllCones()
 
-            conos_exteriores = smooth_and_expand_points(cones, float(self.guiLogic.ancho), len(cones)*10, float(self.guiLogic.dist_cones))[0]
-            conos_interiores = smooth_and_expand_points(cones, float(self.guiLogic.ancho), len(cones)*10, float(self.guiLogic.dist_cones))[1]
+            conos_exteriores = smooth_and_expand_points(cones, float(self.guiLogic.width), len(cones)*10, float(self.guiLogic.dist_cones))[0]
+            conos_interiores = smooth_and_expand_points(cones, float(self.guiLogic.width), len(cones)*10, float(self.guiLogic.dist_cones))[1]
 
             for x, y in conos_exteriores:
                 cone = ((x, y, 0), guiLogic.landmarkType.BLUE)

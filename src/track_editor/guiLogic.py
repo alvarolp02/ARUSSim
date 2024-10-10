@@ -34,7 +34,7 @@ class guiLogic():
     d2r = np.pi / 180.0
     self.originGeodeticCoordinates = np.array([51.001745, 13.641794,210])
     self.originENURotation = d2r * np.array([0,0,45])
-    self.ancho = 0
+    self.width = 0
     self.dist_cones = 0
   # https://stackoverflow.com/questions/27161533/find-the-shortest-distance-between-a-point-and-line-segments-not-line
   def lineseg_dists(self, p, a, b):
