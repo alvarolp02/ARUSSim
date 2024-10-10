@@ -13,7 +13,6 @@ import numpy as np
 
 from points_to_circuit import *
 from drawView import *
-from drawView import *
 
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -404,15 +403,14 @@ class Ui_MainWindow(object):
             cones = self.conesOnMap()
             self.graphicsView.removeAllCones()
 
-            conos_exteriores = smooth_and_expand_points(cones, float(self.guiLogic.width), len(cones)*10, float(self.guiLogic.dist_cones))[0]
-            conos_interiores = smooth_and_expand_points(cones, float(self.guiLogic.width), len(cones)*10, float(self.guiLogic.dist_cones))[1]
+            outer_cones, inner_cones = smooth_and_expand_points(cones, float(self.guiLogic.width), len(cones)*10, float(self.guiLogic.dist_cones))[0]
 
-            for x, y in conos_exteriores:
+            for x, y in outer_cones:
                 cone = ((x, y, 0), guiLogic.landmarkType.BLUE)
                 self.graphicsView.addCone(cone)
                 self.guiLogic.lanesConnectionLeft.append(cone)
 
-            for x, y in conos_interiores:
+            for x, y in inner_cones:
                 cone = ((x, y, 0), guiLogic.landmarkType.YELLOW)
                 self.graphicsView.addCone(cone)
                 self.guiLogic.lanesConnectionRight.append(cone)

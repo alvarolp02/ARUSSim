@@ -65,10 +65,8 @@ def intToLandmarkType(int):
 def writeYaml(fileName, cones, leftLane, rightLane, timeKeeping, startPose, earthToTrack):
     path = Path(fileName)
 
-    # Combinar todos los conos
     all_cones = cones + leftLane + rightLane  + timeKeeping
 
-    # Cabecera del archivo .pcd
     header = f"""# .PCD v0.7 - Point Cloud Data file format
 VERSION 0.7
 FIELDS x y z color score
@@ -82,16 +80,14 @@ POINTS {len(all_cones)}
 DATA ascii
 """
 
-    # Formatear los puntos (conos)
     points = []
     for cono in all_cones:
         position = cono[0]
         cone_type = landmarkTypeToString(cono[1])
-        # Formato: "x y z color score"
+        # Format: "x y z color score"
         point_line = f"{position[0]} {position[1]} {int(0)} {cone_type} 1"
         points.append(point_line)
 
-    # Abrir el archivo en modo de escritura y escribir la cabecera y los puntos
     with open(path, 'w') as f:
         f.write(header)
         f.write("\n".join(points))
@@ -99,7 +95,7 @@ DATA ascii
 def readYaml(fileName):
     path = Path(fileName)
 
-    yaml=YAML(typ='safe')   # default, if not specfied, is 'rt' (round-trip)
+    yaml=YAML(typ='safe')   
     data = yaml.load(path)
 
     unkownCones = []
