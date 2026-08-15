@@ -1,0 +1,6 @@
+numpy==2.2.6
+pandas==2.3.1
+matplotlib==3.10.3
+mcap==1.2.2
+mcap_bag_parser==0.1.2
+mcap-ros2-support==0.5.5

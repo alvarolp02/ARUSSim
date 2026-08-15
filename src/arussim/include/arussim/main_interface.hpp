@@ -46,7 +46,6 @@ private Q_SLOTS:
   void stop_button_clicked();
   void reset_button_clicked();
   void update_lap_time_labels(double lap_time_);
-  void circuit_selector(const QString & option);
   void process_output();
 
 protected:

@@ -1,5 +1,8 @@
 #include <arussim/main_interface.hpp>
-
+#include <QStandardItemModel>
+#include <QStandardItem>
+#include <QBrush>
+#include <QFont>
 namespace main_interface
 {
 
@@ -102,16 +105,68 @@ MainInterface::MainInterface(QWidget* parent) : Panel(parent)
     connect(reset_button_, &QPushButton::clicked, this, &MainInterface::reset_button_clicked);
     button_grid->addWidget(reset_button_, 2, 1);
 
-    // Circuit selection
+    // Circuit selection 
     circuit_select_ = new QComboBox(this);
     circuit_select_->setFixedHeight(rviz_height_ * 0.025);
     circuit_select_->setPlaceholderText("Choose a circuit");
-    std::string package_path_arussim = ament_index_cpp::get_package_share_directory("arussim");
-    QString tracks_path = QString::fromStdString(package_path_arussim + "/resources/tracks/");
-    QDir tracks_dir(tracks_path);
-    QStringList pcd_files = tracks_dir.entryList(QStringList() << "*.pcd", QDir::Files);
-    circuit_select_->addItems(pcd_files);
-    connect(circuit_select_, &QComboBox::currentTextChanged, this, &MainInterface::circuit_selector);
+
+    std::string pkg_arussim = ament_index_cpp::get_package_share_directory("arussim");
+    QString tracks_root = QString::fromStdString(pkg_arussim + "/resources/tracks/");
+
+    auto * mdl = new QStandardItemModel(circuit_select_);
+    circuit_select_->setModel(mdl);
+
+    auto add_header = [&](const QString & label) {
+        auto * it = new QStandardItem("── " + label + " ──");
+        it->setEnabled(false);
+        it->setForeground(QBrush(QColor(110, 90, 50)));
+        QFont f = it->font(); f.setItalic(true); f.setBold(true); it->setFont(f);
+        it->setBackground(QBrush(QColor(225, 218, 202)));
+        mdl->appendRow(it);
+    };
+
+    auto add_subdir = [&](const QString & subdir, const QString & label) {
+        QDir d(tracks_root + subdir);
+        if (!d.exists()) return;
+        QStringList files = d.entryList(QStringList() << "*.pcd", QDir::Files, QDir::Name);
+        if (files.isEmpty()) return;
+        add_header(label);
+        for (const QString & f : files) {
+            auto * it = new QStandardItem(f);
+            it->setData(subdir + "/" + f, Qt::UserRole);  
+            mdl->appendRow(it);
+        }
+    };
+
+    add_subdir("competition", "Competition");
+    add_subdir("generated",   "Generated (auto)");
+    add_subdir("test",        "Test");
+    add_subdir("custom",      "Custom");
+
+    QStringList root_files = QDir(tracks_root).entryList(
+        QStringList() << "*.pcd", QDir::Files, QDir::Name);
+    if (!root_files.isEmpty()) {
+        add_header("Uncategorized");
+        for (const QString & f : root_files) {
+            auto * it = new QStandardItem(f);
+            it->setData(f, Qt::UserRole);
+            mdl->appendRow(it);
+        }
+    }
+
+    connect(circuit_select_, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, [this](int idx) {
+                QString val = circuit_select_->itemData(idx, Qt::UserRole).toString();
+                if (val.isEmpty()) return;  
+                auto msg = std_msgs::msg::String();
+                msg.data = val.toStdString();
+                circuit_pub_->publish(msg);
+                auto rst = std_msgs::msg::Bool(); rst.data = true;
+                reset_pub_->publish(rst);
+                RCLCPP_INFO(rclcpp::get_logger("MainInterface"),
+                    "%sCircuit: %s%s", cyan.c_str(), val.toStdString().c_str(), reset.c_str());
+          });
+
     button_grid->addWidget(circuit_select_, 1, 1);
 
     // Launch selection
@@ -260,24 +315,6 @@ void MainInterface::reset_button_clicked()
     lap_label_->setText("Lap: 0");
 
     RCLCPP_INFO(rclcpp::get_logger("MainInterface"), "%sReset Simulation%s", cyan.c_str(), reset.c_str());
-}
-
-/**
- * @brief Callback for the circuit selector
- * 
- * @param option 
- */
-void MainInterface::circuit_selector(const QString & option)
-{
-    auto msg_circuit = std_msgs::msg::String();
-    msg_circuit.data = option.toStdString();
-    circuit_pub_->publish(msg_circuit);
-
-    auto msg_reset = std_msgs::msg::Bool();
-    msg_reset.data = true;
-    reset_pub_->publish(msg_reset);
-
-    RCLCPP_INFO(rclcpp::get_logger("MainInterface"), "%sCircuit selected: %s%s", cyan.c_str(), option.toStdString().c_str(), reset.c_str());
 }
 
 /**

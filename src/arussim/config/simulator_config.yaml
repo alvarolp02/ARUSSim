@@ -2,7 +2,7 @@ arussim:
   ros__parameters:
     simulation_car: 'ART_26D_DV'   # str    Simulation car model
     simulation_mode: 'default'             # str   default/raspi_sim/hil 
-    track: "FSG"
+    track: "competition/FSG"
     state_update_rate: 1000.0      # Hz
     controller_rate:   200.0       # Hz
     use_gss: true
