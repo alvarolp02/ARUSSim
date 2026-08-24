@@ -228,19 +228,19 @@ Sensors::Sensors() : Node("sensors")
         },
         {0x100, 2, {
             {"enable_amk_status_byte1", {8, 15, false, 1.0, 0.0}}
-            }, Sensors::CanBus::kCan2
+            }, Sensors::CanBus::kCan1
         },
         {0x104, 2, {
             {"enable_amk_status_byte1", {8, 15, false, 1.0, 0.0}}
-            }, Sensors::CanBus::kCan2
+            }, Sensors::CanBus::kCan1
         },
         {0x108, 2, {
             {"enable_amk_status_byte1", {8, 15, false, 1.0, 0.0}}
-            }, Sensors::CanBus::kCan2
+            }, Sensors::CanBus::kCan1
         },
         {0x112, 2, {
             {"enable_amk_status_byte1", {8, 15, false, 1.0, 0.0}}
-            }, Sensors::CanBus::kCan2
+            }, Sensors::CanBus::kCan1
         },
         {0x221, 1, {
             {"enable_flag", {0, 7, false, 1.0, 0.0}}
